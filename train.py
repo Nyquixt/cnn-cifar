@@ -53,6 +53,8 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle
 # define losses lists to plot
 train_losses = []
 val_losses = []
+train_accuracy = []
+val_accuracy = []
 
 # define model
 vgg = VGG('VGG16')
@@ -65,7 +67,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(vgg.parameters(), lr=lr, momentum=momentum)
 
 # Learning rate scheduler
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=100, gamma=0.1)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=50, gamma=0.1)
 
 # Train the model
 for epoch in range(n_epoch):  # loop over the dataset multiple times
@@ -110,6 +112,9 @@ for epoch in range(n_epoch):  # loop over the dataset multiple times
             train_acc = calculate_acc(trainloader, vgg)
             val_acc = calculate_acc(testloader, vgg)
 
+            train_accuracy.append(train_acc)
+            val_accuracy.append(val_acc)
+
             print('[Epoch: %d, Batch: %5d] Train Loss: %.3f    Train Acc: %.3f%%    Val Loss: %.3f    Val Acc: %.3f%%' %
                   ( epoch + 1, i + 1, training_loss / every_batch, train_acc, validation_loss / (10000/batch_size), val_acc ))
             
@@ -120,8 +125,6 @@ for epoch in range(n_epoch):  # loop over the dataset multiple times
 
 # Test the model
 vgg.eval()
-vgg.to('cpu')
-
 val_acc = calculate_acc(testloader, vgg)
 print('Test Accuracy of the vgg on the 10000 test images: {} %'.format(val_acc))
 
@@ -131,12 +134,23 @@ torch.save(vgg, 'vgg-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(r
 # Save plot
 x = np.array([x for x in range(len(train_losses))]) * every_batch
 y1 = np.array(train_losses)
-
 y2 = np.array(val_losses)
 
-plt.plot(x, y1, label='train loss')
-plt.plot(x, y2, label='val loss')
-plt.legend()
-plt.xlabel('batches')
-plt.ylabel('losses')
+y3 = np.array(train_accuracy)
+y4 = np.array(val_accuracy)
+
+fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1)
+
+ax1.plot(x, y1, label='train loss')
+ax1.plot(x, y2, label='val loss')
+ax1.legend()
+ax1.xaxis.set_visible(False)
+ax1.set_ylabel('losses')
+
+ax2.plot(x, y3, label='train acc')
+ax2.plot(x, y4, label='val acc')
+ax2.legend()
+ax2.set_xlabel('batches')
+ax2.set_ylabel('losses')
+
 plt.savefig('losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))

@@ -9,6 +9,7 @@ import argparse
 import time
 
 from model import VGG
+from utils import calculate_acc
 
 parser = argparse.ArgumentParser(description='Training VGG16 on CIFAR10')
 
@@ -29,8 +30,8 @@ momentum = args.momentum
 every_batch = args.update
 
 # define transform for images
-# data augmentation
-transform = transforms.Compose(
+# data augmentation for train and test set
+train_transform = transforms.Compose(
     [transforms.RandomCrop(size=32, padding=4),
      transforms.RandomHorizontalFlip(p=0.5),
      transforms.RandomRotation(degrees=45),
@@ -38,10 +39,15 @@ transform = transforms.Compose(
      transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)) # this is the std and mean from ImageNet
     ])
 
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True, transform=transform)
+test_transform = transforms.Compose(
+    [transforms.ToTensor(),
+     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    ])
+
+trainset = torchvision.datasets.CIFAR10(root='./data', train=True, transform=train_transform, download=True)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
 
-testset = torchvision.datasets.CIFAR10(root='./data', train=False, transform=transform)
+testset = torchvision.datasets.CIFAR10(root='./data', train=False, transform=test_transform, download=True)
 testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=2)
 
 # define losses lists to plot
@@ -59,7 +65,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(vgg.parameters(), lr=lr, momentum=momentum)
 
 # Learning rate scheduler
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=1, gamma=0.95)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=100, gamma=0.1)
 
 # Train the model
 for epoch in range(n_epoch):  # loop over the dataset multiple times
@@ -101,8 +107,11 @@ for epoch in range(n_epoch):  # loop over the dataset multiple times
             train_losses.append(training_loss / every_batch)
             val_losses.append(validation_loss / (10000/batch_size))
 
-            print('[Epoch: %d, Batch: %5d] Train Loss: %.3f    Val Loss: %.3f' %
-                  ( epoch + 1, i + 1, training_loss / every_batch, validation_loss / (10000/batch_size) ))
+            train_acc = calculate_acc(trainloader, vgg)
+            val_acc = calculate_acc(testloader, vgg)
+
+            print('[Epoch: %d, Batch: %5d] Train Loss: %.3f    Train Acc: %.3f%%    Val Loss: %.3f    Val Acc: %.3f%%' %
+                  ( epoch + 1, i + 1, training_loss / every_batch, train_acc, validation_loss / (10000/batch_size), val_acc ))
             
             training_loss = 0.0
 
@@ -113,17 +122,8 @@ for epoch in range(n_epoch):  # loop over the dataset multiple times
 vgg.eval()
 vgg.to('cpu')
 
-with torch.no_grad():
-    correct = 0
-    total = 0
-    for data in testloader:
-        images, labels = data
-        outputs = vgg(images)
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-
-    print('Test Accuracy of the vgg on the 10000 test images: {} %'.format((correct / total) * 100))
+val_acc = calculate_acc(testloader, vgg)
+print('Test Accuracy of the vgg on the 10000 test images: {} %'.format(val_acc))
 
 # Save the model
 torch.save(vgg, 'vgg-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))

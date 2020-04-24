@@ -131,5 +131,5 @@ dmypy.json
 # From the repo
 data/
 .vscode/
-vgg*
-losses-*.png
+models/
+plots/

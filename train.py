@@ -129,7 +129,7 @@ val_acc = calculate_acc(testloader, vgg)
 print('Test Accuracy of the vgg on the 10000 test images: {} %'.format(val_acc))
 
 # Save the model
-torch.save(vgg, 'vgg-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+torch.save(vgg, 'models/vgg-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
 
 # Save plot
 x = np.array([x for x in range(len(train_losses))]) * every_batch
@@ -153,4 +153,4 @@ ax2.legend()
 ax2.set_xlabel('batches')
 ax2.set_ylabel('losses')
 
-plt.savefig('losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+plt.savefig('plots/losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))

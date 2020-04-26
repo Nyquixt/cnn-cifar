@@ -55,3 +55,12 @@
 
 ### Graph From the Best Result of 92.84% Accuracy on the Test Set
 ![Loss Plotting](./assets/losses.png)
+
+### Reproducing
+To reproduce the 92.84% accuracy model (or close to it), run
+
+    pip3 install -r requirements.txt
+    
+    cd src/
+
+    python3 train.py -e 300 -l 0.1 -b 128 -u 100 -d 0.0005 -s 100 -g 0.1

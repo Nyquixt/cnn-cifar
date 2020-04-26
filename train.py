@@ -159,6 +159,6 @@ ax2.plot(x, y3, label='train acc')
 ax2.plot(x, y4, label='val acc')
 ax2.legend()
 ax2.set_xlabel('batches')
-ax2.set_ylabel('losses')
+ax2.set_ylabel('acc')
 
 plt.savefig('plots/losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))

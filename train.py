@@ -18,6 +18,9 @@ parser.add_argument('--batch', '-b', type=int, default=4, help='The batch size')
 parser.add_argument('--lr', '-l', type=float, default=0.001, help='Learning rate')
 parser.add_argument('--momentum', '-m', type=float, default=0.9, help='Momentum for SGD')
 parser.add_argument('--update', '-u', type=int, default=2000, help='Print out stats after x batches')
+parser.add_argument('--weight-decay', '-d', type=float, default=0.0, help='Weight decay for SGD optimizer')
+parser.add_argument('--step-size', '-s', type=int, default=1, help='Step in learning rate scheduler')
+parser.add_argument('--gamma', '-g', type=float, default=0.95, help='Gamma in learning rate scheduler')
 
 args = parser.parse_args()
 print(args)
@@ -28,6 +31,9 @@ batch_size = args.batch
 lr = args.lr
 momentum = args.momentum
 every_batch = args.update
+weight_decay = args.weight_decay
+step_size = args.step_size
+gamma = args.gamma
 
 # define transform for images
 # data augmentation for train and test set
@@ -64,10 +70,10 @@ vgg.train()
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(vgg.parameters(), lr=lr, momentum=momentum)
+optimizer = torch.optim.SGD(vgg.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
 
 # Learning rate scheduler
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=50, gamma=0.1)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=step_size, gamma=gamma)
 
 # Train the model
 for epoch in range(n_epoch):  # loop over the dataset multiple times
@@ -110,7 +116,9 @@ for epoch in range(n_epoch):  # loop over the dataset multiple times
             val_losses.append(validation_loss / (10000/batch_size))
 
             train_acc = calculate_acc(trainloader, vgg)
+            vgg.eval()
             val_acc = calculate_acc(testloader, vgg)
+            vgg.train()
 
             train_accuracy.append(train_acc)
             val_accuracy.append(val_acc)

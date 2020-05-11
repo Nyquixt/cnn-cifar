@@ -14,7 +14,6 @@ class VGG(nn.Module):
         self.features = self._make_layers(cfg[vgg_name])
         self.fc1 = nn.Linear(512, 1024)
         self.relu = nn.ReLU(inplace=True)
-        self.dropout = nn.Dropout(0.3)
         self.fc2 = nn.Linear(1024, 10)
 
     def forward(self, x):
@@ -22,7 +21,6 @@ class VGG(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.fc1(out)
         out = self.relu(out)
-        out = self.dropout(out)
         out = self.fc2(out)
         return out
 

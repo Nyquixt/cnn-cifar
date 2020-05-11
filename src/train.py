@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import argparse
 import time
 
-from model import VGG
+from vgg import VGG
 from utils import calculate_acc
 
 parser = argparse.ArgumentParser(description='Training VGG16 on CIFAR10')

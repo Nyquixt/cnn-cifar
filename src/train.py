@@ -9,10 +9,12 @@ import argparse
 import time
 
 from vgg import VGG
+from resnet import ResNet18, ResNet50
 from utils import calculate_acc
 
 parser = argparse.ArgumentParser(description='Training VGG16 on CIFAR10')
 
+parser.add_argument('--network', '-n', choices=['vgg16', 'vgg19', 'resnet18', 'resnet50'], required=True)
 parser.add_argument('--epoch', '-e', type=int, default=30, help='Number of epochs')
 parser.add_argument('--batch', '-b', type=int, default=4, help='The batch size')
 parser.add_argument('--lr', '-l', type=float, default=0.001, help='Learning rate')
@@ -40,14 +42,13 @@ gamma = args.gamma
 train_transform = transforms.Compose(
     [transforms.RandomCrop(size=32, padding=4),
      transforms.RandomHorizontalFlip(p=0.5),
-     transforms.RandomRotation(degrees=45),
      transforms.ToTensor(),
-     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)) # this is the std and mean from ImageNet
+     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261)) # this is the std and mean from CIFAR10
     ])
 
 test_transform = transforms.Compose(
     [transforms.ToTensor(),
-     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.247, 0.243, 0.261))
     ])
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, transform=train_transform, download=True)
@@ -63,14 +64,21 @@ train_accuracy = []
 val_accuracy = []
 
 # define model
-vgg = VGG('VGG16')
-# vgg = torch.load('vgg-cifar10.chkpt')
-vgg.cuda()
-vgg.train()
+if args.network == 'vgg16':
+    net = VGG('VGG16')
+elif args.network == 'vgg19':
+    net = VGG('VGG19')
+elif args.network == 'resnet18':
+    net = ResNet18()
+elif args.network == 'resnet50':
+    net = ResNet50()
+
+net.cuda()
+net.train()
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(vgg.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
+optimizer = torch.optim.SGD(net.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
 
 # Learning rate scheduler
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=step_size, gamma=gamma)
@@ -89,7 +97,7 @@ for epoch in range(n_epoch):  # loop over the dataset multiple times
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        outputs = vgg(inputs)
+        outputs = net(inputs)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
@@ -107,7 +115,7 @@ for epoch in range(n_epoch):  # loop over the dataset multiple times
                     inputs = inputs.cuda()
                     labels = labels.cuda()
 
-                    outputs = vgg(inputs)
+                    outputs = net(inputs)
                     loss = criterion(outputs, labels)
 
                     validation_loss += loss.item()
@@ -115,10 +123,10 @@ for epoch in range(n_epoch):  # loop over the dataset multiple times
             train_losses.append(training_loss / every_batch)
             val_losses.append(validation_loss / (10000/batch_size))
 
-            train_acc = calculate_acc(trainloader, vgg)
-            vgg.eval()
-            val_acc = calculate_acc(testloader, vgg)
-            vgg.train()
+            train_acc = calculate_acc(trainloader, net)
+            net.eval()
+            val_acc = calculate_acc(testloader, net)
+            net.train()
 
             train_accuracy.append(train_acc)
             val_accuracy.append(val_acc)
@@ -132,12 +140,19 @@ for epoch in range(n_epoch):  # loop over the dataset multiple times
     scheduler.step()
 
 # Test the model
-vgg.eval()
-val_acc = calculate_acc(testloader, vgg)
-print('Test Accuracy of the vgg on the 10000 test images: {} %'.format(val_acc))
+net.eval()
+val_acc = calculate_acc(testloader, net)
+print('Test Accuracy of the network on the 10000 test images: {} %'.format(val_acc))
 
 # Save the model
-torch.save(vgg, 'models/vgg-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+if args.network == 'vgg16':
+    torch.save(net, 'models/vgg16-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+elif args.network == 'vgg19':
+    torch.save(net, 'models/vgg19-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+elif args.network == 'resnet18':
+    torch.save(net, 'models/resnet18-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+elif args.network == 'resnet50':
+    torch.save(net, 'models/resnet50-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
 
 # Save plot
 x = np.array([x for x in range(len(train_losses))]) * every_batch
@@ -161,4 +176,11 @@ ax2.legend()
 ax2.set_xlabel('batches')
 ax2.set_ylabel('acc')
 
-plt.savefig('plots/losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+if args.network == 'vgg16':
+    plt.savefig('plots/vgg16-losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+elif args.network == 'vgg19':
+    plt.savefig('plots/vgg19-losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+elif args.network == 'resnet18':
+    plt.savefig('plots/resnet18-losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+elif args.network == 'resnet50':
+    plt.savefig('plots/resnet50-losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))

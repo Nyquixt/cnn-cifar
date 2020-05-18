@@ -8,13 +8,15 @@ import matplotlib.pyplot as plt
 import argparse
 import time
 
-from vgg import VGG
-from resnet import ResNet18, ResNet50
+from nets.vgg import VGG
+from nets.resnet import ResNet18, ResNet50
+from nets.googlenet import GoogLeNet
+from nets.lenet import LeNet
 from utils import calculate_acc
 
 parser = argparse.ArgumentParser(description='Training VGG16 on CIFAR10')
 
-parser.add_argument('--network', '-n', choices=['vgg16', 'vgg19', 'resnet18', 'resnet50'], required=True)
+parser.add_argument('--network', '-n', choices=['vgg16', 'vgg19', 'resnet18', 'resnet50', 'googlenet', 'lenet'], required=True)
 parser.add_argument('--epoch', '-e', type=int, default=30, help='Number of epochs')
 parser.add_argument('--batch', '-b', type=int, default=4, help='The batch size')
 parser.add_argument('--lr', '-l', type=float, default=0.001, help='Learning rate')
@@ -72,6 +74,10 @@ elif args.network == 'resnet18':
     net = ResNet18()
 elif args.network == 'resnet50':
     net = ResNet50()
+elif args.network == 'googlenet':
+    net = GoogLeNet()
+elif args.network == 'lenet':
+    net = LeNet()
 
 net.cuda()
 net.train()
@@ -145,14 +151,8 @@ val_acc = calculate_acc(testloader, net)
 print('Test Accuracy of the network on the 10000 test images: {} %'.format(val_acc))
 
 # Save the model
-if args.network == 'vgg16':
-    torch.save(net, 'models/vgg16-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
-elif args.network == 'vgg19':
-    torch.save(net, 'models/vgg19-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
-elif args.network == 'resnet18':
-    torch.save(net, 'models/resnet18-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
-elif args.network == 'resnet50':
-    torch.save(net, 'models/resnet50-cifar10-b{}-e{}-{}.chkpt'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+torch.save(net, 'models/{}-cifar10-b{}-e{}-{}.chkpt'.format(args.network, batch_size, n_epoch, int(round(time.time() * 1000))))
+
 
 # Save plot
 x = np.array([x for x in range(len(train_losses))]) * every_batch
@@ -176,11 +176,4 @@ ax2.legend()
 ax2.set_xlabel('batches')
 ax2.set_ylabel('acc')
 
-if args.network == 'vgg16':
-    plt.savefig('plots/vgg16-losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
-elif args.network == 'vgg19':
-    plt.savefig('plots/vgg19-losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
-elif args.network == 'resnet18':
-    plt.savefig('plots/resnet18-losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
-elif args.network == 'resnet50':
-    plt.savefig('plots/resnet50-losses-b{}-e{}-{}.png'.format(batch_size, n_epoch, int(round(time.time() * 1000))))
+plt.savefig('plots/{}-losses-b{}-e{}-{}.png'.format(args.network, batch_size, n_epoch, int(round(time.time() * 1000))))

@@ -151,7 +151,7 @@ val_acc = calculate_acc(testloader, net)
 print('Test Accuracy of the network on the 10000 test images: {} %'.format(val_acc))
 
 # Save the model
-torch.save(net, 'models/{}-cifar10-b{}-e{}-{}.chkpt'.format(args.network, batch_size, n_epoch, int(round(time.time() * 1000))))
+torch.save(net.state_dict(), 'models/{}-cifar10-b{}-e{}-{}.pth'.format(args.network, batch_size, n_epoch, int(round(time.time() * 1000))))
 
 
 # Save plot

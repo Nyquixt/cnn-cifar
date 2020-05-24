@@ -9,12 +9,12 @@ cfg = {
 
 
 class VGG(nn.Module):
-    def __init__(self, vgg_name):
+    def __init__(self, vgg_name, num_classes=10):
         super(VGG, self).__init__()
         self.features = self._make_layers(cfg[vgg_name])
         self.fc1 = nn.Linear(512, 1024)
         self.relu = nn.ReLU(inplace=True)
-        self.fc2 = nn.Linear(1024, 10)
+        self.fc2 = nn.Linear(1024, num_classes)
 
     def forward(self, x):
         out = self.features(x)

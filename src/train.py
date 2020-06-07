@@ -11,12 +11,13 @@ import time
 from nets.vgg import VGG
 from nets.resnet import ResNet18, ResNet50
 from nets.googlenet import GoogLeNet
+from nets.alexnet import AlexNet
 from nets.lenet import LeNet
 from utils import calculate_acc
 
 parser = argparse.ArgumentParser(description='Training VGG16 on CIFAR10')
 
-parser.add_argument('--network', '-n', choices=['vgg16', 'vgg19', 'resnet18', 'resnet50', 'googlenet', 'lenet'], required=True)
+parser.add_argument('--network', '-n', choices=['vgg16', 'vgg19', 'resnet18', 'resnet50', 'googlenet', 'lenet', 'alexnet'], required=True)
 parser.add_argument('--epoch', '-e', type=int, default=30, help='Number of epochs')
 parser.add_argument('--batch', '-b', type=int, default=4, help='The batch size')
 parser.add_argument('--lr', '-l', type=float, default=0.001, help='Learning rate')
@@ -78,6 +79,8 @@ elif args.network == 'googlenet':
     net = GoogLeNet()
 elif args.network == 'lenet':
     net = LeNet()
+elif args.network == 'alexnet':
+    net = AlexNet()
 
 net.cuda()
 net.train()

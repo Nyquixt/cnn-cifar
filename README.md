@@ -20,7 +20,7 @@ Results of Recent CNN Models on the CIFAR10 Dataset
 | AlexNet       | 86.2%         |
 | VGG19         | 93.4%         |
 | ResNet18      | 95.1%         |
-| ResNet50      | -----         |
+| ResNet50      | 94.7%         |
 | GoogLeNet     | 94.2%         |
 
 Results of Recent CNN Models' Top-1 on the CIFAR100 Dataset
@@ -29,7 +29,7 @@ Results of Recent CNN Models' Top-1 on the CIFAR100 Dataset
 | ------------- |---------------|
 | LeNet         | -----         |
 | AlexNet       | -----         |
-| VGG19         | -----         |
+| VGG19         | 71.0%         |
 | ResNet18      | 76.9%         |
-| ResNet50      | -----         |
+| ResNet50      | 76.5%         |
 | GoogLeNet     | -----         |
